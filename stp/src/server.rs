@@ -1,7 +1,7 @@
 use crate::error::{ConnectError, ConnectResult, RecvResult, SendResult};
 use std::io;
 use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream, ToSocketAddrs};
+use std::net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs};
 use thiserror::Error;
 
 /// Represent STP server, that can accept incoming connections.
@@ -64,5 +64,10 @@ impl StpConnection {
     /// Receive requests from client
     pub fn recv_request(&mut self) -> RecvResult {
         crate::recv_string(&mut self.stream)
+    }
+
+    /// Address of connected client
+    pub fn peer_addr(&self) -> io::Result<SocketAddr> {
+        self.stream.peer_addr()
     }
 }

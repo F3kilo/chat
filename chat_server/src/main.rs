@@ -22,10 +22,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
         };
 
+        let addr = match connection.peer_addr() {
+            Ok(addr) => addr.to_string(),
+            Err(_) => "unknown".into(),
+        };
+
+        println!("New client connected: {}", addr);
+
         let chat = chat.clone();
         thread::spawn(move || {
-            if let Err(e) = handle_connection(connection, chat) {
-                eprintln!("Request handling error: {}", e);
+            if handle_connection(connection, chat).is_err() {
+                println!("Client disconnected: {}", addr);
             }
         });
     }
