@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+stp = { path = "../stp" }
+anyhow = "1.0.51"
+dashmap = "4.0.2"
+chrono = "0.4.19"
