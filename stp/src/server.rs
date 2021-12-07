@@ -4,11 +4,13 @@ use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use thiserror::Error;
 
+/// Represent STP server, that can accept incoming connections.
 pub struct StpServer {
     tcp: TcpListener,
 }
 
 impl StpServer {
+    /// Binds server to specefied socket.
     pub fn bind<Addrs>(addrs: Addrs) -> BindResult
     where
         Addrs: ToSocketAddrs,
@@ -17,6 +19,7 @@ impl StpServer {
         Ok(Self { tcp })
     }
 
+    /// Blocking iterator for incoming connections.
     pub fn incoming(&self) -> impl Iterator<Item = ConnectResult<StpConnection>> + '_ {
         self.tcp.incoming().map(|s| match s {
             Ok(s) => Self::try_handshake(s),
@@ -38,21 +41,27 @@ impl StpServer {
 
 pub type BindResult = Result<StpServer, BindError>;
 
+/// Bind to socket error
 #[derive(Debug, Error)]
 pub enum BindError {
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
 }
 
+/// Represent connection from client.
+///
+/// Allows to receive requests and send responses.
 pub struct StpConnection {
     stream: TcpStream,
 }
 
 impl StpConnection {
+    /// Send response to client
     pub fn send_response<Resp: AsRef<str>>(&mut self, response: Resp) -> SendResult {
         crate::send_string(response, &mut self.stream)
     }
 
+    /// Receive requests from client
     pub fn recv_request(&mut self) -> RecvResult {
         crate::recv_string(&mut self.stream)
     }
