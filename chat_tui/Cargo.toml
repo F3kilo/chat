@@ -1,0 +1,10 @@
+[package]
+name = "chat_tui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chat_client = { path = "../chat_client" }
+anyhow = "1.0.51"

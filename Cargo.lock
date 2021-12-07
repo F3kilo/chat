@@ -38,6 +38,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "chat_tui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chat_client",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
