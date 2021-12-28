@@ -70,7 +70,7 @@ impl fmt::Display for Message {
 
 #[cfg(test)]
 mod tests {
-    use crate::Chat;
+    use crate::chat::Chat;
 
     #[test]
     fn fetch_after_append() {

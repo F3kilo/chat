@@ -9,6 +9,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8b26702f315f53b6071259e15dd9d64528213b44d61de1ec926eca7715d62203"
 
 [[package]]
+name = "async-trait"
+version = "0.1.52"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "061a7acccaa286c011ddc30970520b98fa40e00c9d644633fb26b5fc63a265e3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,6 +36,7 @@ name = "chat_client"
 version = "0.1.0"
 dependencies = [
  "stp",
+ "tokio",
 ]
 
 [[package]]
@@ -35,6 +47,7 @@ dependencies = [
  "chrono",
  "dashmap",
  "stp",
+ "tokio",
 ]
 
 [[package]]
@@ -42,7 +55,9 @@ name = "chat_tui"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "chat_client",
+ "tokio",
 ]
 
 [[package]]

@@ -1,3 +1,5 @@
+pub mod asnc;
+
 use std::net::ToSocketAddrs;
 use stp::client::{RequestResult, StpClient};
 use stp::error::ConnectResult;

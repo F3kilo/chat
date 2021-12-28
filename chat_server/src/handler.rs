@@ -84,7 +84,8 @@ impl RequestHandler {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Chat, Request, RequestHandler};
+    use crate::chat::Chat;
+    use crate::handler::{Request, RequestHandler};
 
     #[test]
     fn append_fetch() {

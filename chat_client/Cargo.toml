@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 stp = { path = "../stp" }
+tokio = { version = "1.15.0", features = ["net"] }

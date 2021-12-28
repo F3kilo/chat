@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 chat_client = { path = "../chat_client" }
 anyhow = "1.0.51"
+async-trait = "0.1.52"
+
+[dev-dependencies]
+tokio = { version = "1.15.0", features = ["net", "macros", "rt-multi-thread", "fs"] }
