@@ -1,5 +1,5 @@
-use stp::server::{StpConnection, StpServer};
 use std::error::Error;
+use stp::server::{StpConnection, StpServer};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let server = StpServer::bind("127.0.0.1:55331")?;

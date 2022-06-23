@@ -1,5 +1,5 @@
-use stp::client::StpClient;
 use std::error::Error;
+use stp::client::StpClient;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut client = StpClient::connect("127.0.0.1:55331")?;
