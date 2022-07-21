@@ -23,13 +23,13 @@ async fn read_exact_async(s: &TcpStream, buf: &mut [u8]) -> io::Result<()> {
     Ok(())
 }
 
-async fn write_all_async(s: &TcpStream, buf: &[u8]) -> io::Result<()> {
+async fn write_all_async(stream: &TcpStream, buf: &[u8]) -> io::Result<()> {
     let mut written = 0;
 
     while written < buf.len() {
-        s.writable().await?;
+        stream.writable().await?;
 
-        match s.try_write(&buf[written..]) {
+        match stream.try_write(&buf[written..]) {
             Ok(0) => break,
             Ok(n) => {
                 written += n;
@@ -42,21 +42,21 @@ async fn write_all_async(s: &TcpStream, buf: &[u8]) -> io::Result<()> {
     Ok(())
 }
 
-async fn send_string_async<D: AsRef<str>>(d: D, s: &TcpStream) -> SendResult {
-    let bytes = d.as_ref().as_bytes();
+async fn send_string_async<Data: AsRef<str>>(data: Data, stream: &TcpStream) -> SendResult {
+    let bytes = data.as_ref().as_bytes();
     let len = bytes.len() as u32;
     let len_bytes = len.to_be_bytes();
-    write_all_async(s, &len_bytes).await?;
-    write_all_async(s, bytes).await?;
+    write_all_async(stream, &len_bytes).await?;
+    write_all_async(stream, bytes).await?;
     Ok(())
 }
 
-async fn recv_string_async(s: &TcpStream) -> RecvResult {
+async fn recv_string_async(stream: &TcpStream) -> RecvResult {
     let mut buf = [0; 4];
-    read_exact_async(s, &mut buf).await?;
+    read_exact_async(stream, &mut buf).await?;
     let len = u32::from_be_bytes(buf);
 
     let mut buf = vec![0; len as _];
-    read_exact_async(s, &mut buf).await?;
+    read_exact_async(stream, &mut buf).await?;
     String::from_utf8(buf).map_err(|_| RecvError::BadEncoding)
 }
