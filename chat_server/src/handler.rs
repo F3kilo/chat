@@ -8,7 +8,7 @@ impl<'a> Request<'a> {
         Self(s.split("|||"))
     }
 
-    pub fn next(&mut self) -> &'a str {
+    pub fn next_cmd(&mut self) -> &'a str {
         self.0.next().unwrap_or("")
     }
 }
@@ -23,7 +23,7 @@ impl RequestHandler {
     }
 
     pub fn handle(&mut self, mut request: Request) -> String {
-        let command = request.next();
+        let command = request.next_cmd();
         match command {
             "fetch" => self.fetch(request),
             "create" => self.create_room(request),
@@ -33,7 +33,7 @@ impl RequestHandler {
     }
 
     fn fetch(&self, mut request: Request) -> String {
-        let room_id = request.next();
+        let room_id = request.next_cmd();
         if room_id.is_empty() {
             return "Select room id".into();
         }
@@ -52,7 +52,7 @@ impl RequestHandler {
     }
 
     fn create_room(&mut self, mut request: Request) -> String {
-        let room_id = request.next();
+        let room_id = request.next_cmd();
         if room_id.is_empty() {
             return "Select room id".into();
         }
@@ -64,12 +64,12 @@ impl RequestHandler {
     }
 
     fn append(&self, mut request: Request) -> String {
-        let room_id = request.next();
+        let room_id = request.next_cmd();
         if room_id.is_empty() {
             return "Select room id".into();
         }
 
-        let msg = request.next();
+        let msg = request.next_cmd();
         if msg.is_empty() {
             return "Enter some message".into();
         }

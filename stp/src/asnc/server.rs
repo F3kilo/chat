@@ -1,9 +1,9 @@
+use crate::error::{ConnectError, ConnectResult};
+use crate::{RecvResult, SendResult};
 use std::io;
 use std::net::SocketAddr;
-use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
 use thiserror::Error;
-use crate::{RecvResult, SendResult};
-use crate::error::{ConnectError, ConnectResult};
+use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
 
 /// Represent STP server, that can accept incoming connections.
 pub struct StpServer {

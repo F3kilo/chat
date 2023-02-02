@@ -1,6 +1,6 @@
-use tokio::net::ToSocketAddrs;
 use stp::asnc::client::{RequestResult, StpClient};
 use stp::error::ConnectResult;
+use tokio::net::ToSocketAddrs;
 
 pub struct ChatClient {
     stp: StpClient,
