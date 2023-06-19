@@ -3,6 +3,7 @@ use crate::{RecvResult, SendResult};
 use std::io;
 use std::net::SocketAddr;
 use thiserror::Error;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
 
 /// Represent STP server, that can accept incoming connections.
@@ -26,14 +27,14 @@ impl StpServer {
         Self::try_handshake(connection).await
     }
 
-    async fn try_handshake(stream: TcpStream) -> ConnectResult<StpConnection> {
+    async fn try_handshake(mut stream: TcpStream) -> ConnectResult<StpConnection> {
         let mut buf = [0; 4];
-        super::read_exact_async(&stream, &mut buf).await?;
+        stream.read_exact(&mut buf).await?;
         if &buf != b"clnt" {
             let msg = format!("received: {:?}", buf);
             return Err(ConnectError::BadHandshake(msg));
         }
-        super::write_all_async(&stream, b"serv").await?;
+        stream.write_all(b"serv").await?;
         Ok(StpConnection { stream })
     }
 }
@@ -56,13 +57,13 @@ pub struct StpConnection {
 
 impl StpConnection {
     /// Send response to client
-    pub async fn send_response<Resp: AsRef<str>>(&self, response: Resp) -> SendResult {
-        super::send_string_async(response, &self.stream).await
+    pub async fn send_response<Resp: AsRef<str>>(&mut self, response: Resp) -> SendResult {
+        super::send_string_async(response, &mut self.stream).await
     }
 
     /// Receive requests from client
-    pub async fn recv_request(&self) -> RecvResult {
-        super::recv_string_async(&self.stream).await
+    pub async fn recv_request(&mut self) -> RecvResult {
+        super::recv_string_async(&mut self.stream).await
     }
 
     /// Address of connected client

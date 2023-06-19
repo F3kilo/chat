@@ -12,4 +12,4 @@ dashmap = "4.0.2"
 chrono = "0.4.19"
 
 [dev-dependencies]
-tokio = { version = "1.15.0", features = ["net", "macros", "rt-multi-thread", "fs"] }
+tokio = { version = "1.15.0", features = ["net", "macros", "rt", "fs"] }

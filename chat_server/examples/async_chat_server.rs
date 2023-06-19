@@ -37,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
     }
 }
 
-async fn handle_connection(connection: StpConnection, chat: Chat) -> Result<(), anyhow::Error> {
+async fn handle_connection(mut connection: StpConnection, chat: Chat) -> Result<(), anyhow::Error> {
     let mut handler = RequestHandler::new(chat);
     loop {
         let req_str = connection.recv_request().await?;

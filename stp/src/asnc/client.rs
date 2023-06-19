@@ -1,5 +1,6 @@
 use crate::error::{ConnectError, ConnectResult, RecvError, SendError};
 use thiserror::Error;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::net::ToSocketAddrs;
 
@@ -20,15 +21,15 @@ impl StpClient {
 
     /// Send request to connected STP server.
     pub async fn send_request<R: AsRef<str>>(&mut self, req: R) -> RequestResult {
-        super::send_string_async(req, &self.stream).await?;
-        let response = super::recv_string_async(&self.stream).await?;
+        super::send_string_async(req, &mut self.stream).await?;
+        let response = super::recv_string_async(&mut self.stream).await?;
         Ok(response)
     }
 
-    async fn try_handshake(s: TcpStream) -> ConnectResult<Self> {
-        super::write_all_async(&s, b"clnt").await?;
+    async fn try_handshake(mut s: TcpStream) -> ConnectResult<Self> {
+        s.write_all(b"clnt").await?;
         let mut buf = [0; 4];
-        super::read_exact_async(&s, &mut buf).await?;
+        s.read_exact(&mut buf).await?;
         if &buf != b"serv" {
             let msg = format!("received: {:?}", buf);
             return Err(ConnectError::BadHandshake(msg));

@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
-async fn process_connection(conn: StpConnection) -> Result<(), Box<dyn Error>> {
+async fn process_connection(mut conn: StpConnection) -> Result<(), Box<dyn Error>> {
     let req = conn.recv_request().await?;
     assert_eq!(req, "Hello, server");
     conn.send_response("Hello, client").await?;
