@@ -21,7 +21,7 @@ impl StpServer {
         Ok(Self { tcp })
     }
 
-    /// Blocking iterator for incoming connections.
+    /// Wait for incoming connection.
     pub async fn accept(&self) -> ConnectResult<StpConnection> {
         let (connection, _) = self.tcp.accept().await?;
         Self::try_handshake(connection).await
