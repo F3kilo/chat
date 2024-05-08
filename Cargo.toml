@@ -6,3 +6,5 @@ members = [
     "chat_client",
     "chat_tui"
 ]
+
+resolver = "2"
