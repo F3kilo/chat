@@ -1,10 +1,12 @@
 [workspace]
 
+# Используем последнюю версию resolver, чтобы Cargo не ругался.
+resolver = "2" 
+
 members = [
     "stp",
     "chat_server",
     "chat_client",
-    "chat_tui"
+    "chat_cli"
 ]
 
-resolver = "2"

@@ -1,16 +1,15 @@
-use crate::error::{ConnectError, ConnectResult, RecvError, SendError};
+use crate::error::{ConnectError, RequestError};
 use std::io::{Read, Write};
 use std::net::{TcpStream, ToSocketAddrs};
-use thiserror::Error;
 
-/// Represent client-side connection for STP
+/// Клиент STP.
 pub struct StpClient {
     stream: TcpStream,
 }
 
 impl StpClient {
-    /// Try to connect to specified address and perform handshake.
-    pub fn connect<Addrs>(addrs: Addrs) -> ConnectResult<Self>
+    /// Пытаемся подключится к серверу и проверяем, что он поддерживает STP.
+    pub fn connect<Addrs>(addrs: Addrs) -> Result<Self, ConnectError>
     where
         Addrs: ToSocketAddrs,
     {
@@ -18,35 +17,24 @@ impl StpClient {
         Self::try_handshake(stream)
     }
 
-    /// Send request to connected STP server.
-    pub fn send_request<R: AsRef<str>>(&mut self, req: R) -> RequestResult {
-        crate::send_string(req, &mut self.stream)?;
-        let response = crate::recv_string(&mut self.stream)?;
-        Ok(response)
-    }
-
-    fn try_handshake(mut stream: TcpStream) -> ConnectResult<Self> {
+    /// Проводим handshake, чтобы убедиться, что сервер поддерживает STP:
+    /// 1) отправляем байты "clnt",
+    /// 1) ожидаем байты "serv" в ответ.
+    fn try_handshake(mut stream: TcpStream) -> Result<Self, ConnectError> {
         stream.write_all(b"clnt")?;
         let mut buf = [0; 4];
         stream.read_exact(&mut buf)?;
         if &buf != b"serv" {
-            let msg = format!("received: {:?}", buf);
-            return Err(ConnectError::BadHandshake(msg));
+            return Err(ConnectError::BadHandshake);
         }
         Ok(Self { stream })
     }
+
+    /// Отправка запроса на сервер и получение ответа.
+    pub fn send_request<R: AsRef<str>>(&mut self, req: R) -> Result<String, RequestError> {
+        crate::send_string(req, &mut self.stream)?;
+        let response = crate::recv_string(&mut self.stream)?;
+        Ok(response)
+    }
 }
 
-pub type RequestResult = Result<String, RequestError>;
-
-/// Error for request sending. It consists from two steps: sending and receiving data.
-///
-/// `SendError` caused by send data error.
-/// `RecvError` caused by receive data error.
-#[derive(Debug, Error)]
-pub enum RequestError {
-    #[error(transparent)]
-    Send(#[from] SendError),
-    #[error(transparent)]
-    Recv(#[from] RecvError),
-}

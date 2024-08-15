@@ -7,6 +7,4 @@ edition = "2021"
 
 [dependencies]
 stp = { path = "../stp" }
-anyhow = "1.0.51"
-dashmap = "4.0.2"
-chrono = "0.4.19"
+chrono = "0.4.38"

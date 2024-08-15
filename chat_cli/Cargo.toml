@@ -1,5 +1,5 @@
 [package]
-name = "chat_tui"
+name = "chat_cli"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 chat_client = { path = "../chat_client" }
-anyhow = "1.0.51"
