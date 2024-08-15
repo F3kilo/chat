@@ -30,8 +30,8 @@ impl From<io::Error> for ConnectError {
 impl Error for ConnectError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::BadHandshake => None,
             Self::Io(e) => Some(e),
+            Self::BadHandshake => None,
         }
     }
 }
@@ -59,9 +59,8 @@ impl From<io::Error> for SendError {
 
 impl Error for SendError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Io(e) => Some(e),
-        }
+        let Self::Io(e) = self;
+        Some(e)
     }
 }
 
@@ -94,8 +93,8 @@ impl From<io::Error> for RecvError {
 impl Error for RecvError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::Io(e) => Some(e),
-            Self::BadEncoding => None
+            RecvError::Io(e) => Some(e),
+            RecvError::BadEncoding => None,
         }
     }
 }
