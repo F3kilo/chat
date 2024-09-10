@@ -11,4 +11,4 @@ anyhow = "1.0.51"
 chrono = "0.4.19"
 
 [dev-dependencies]
-tokio = { version = "1.15.0", features = ["net", "macros", "rt", "fs"] }
+tokio = { version = "1.15.0", features = ["net", "macros", "rt", "fs", "sync"] }

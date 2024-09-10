@@ -1,7 +1,9 @@
 use chrono::{DateTime, Utc};
 use std::error::Error;
+use std::sync::Arc;
 use std::{fmt, fs};
-use stp::asnc::server::StpServer;
+use stp::asnc::server::{StpConnection, StpServer};
+use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -11,54 +13,74 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let server = StpServer::bind(addr).await?;
 
     // Создаём новый чат.
-    let mut chat = Chat::default();
+    let chat = Arc::new(Chat::default());
 
     // Обрабатываем подключения клиентов.
     loop {
-        let Ok(mut connection) = server.accept().await else {
+        let Ok(connection) = server.accept().await else {
             continue;
         };
 
+        tokio::spawn(process_connection(connection, chat.clone()));
+    }
+}
+
+async fn process_connection(mut connection: StpConnection, chat: Arc<Chat>) {
+    loop {
+        let chat = chat.clone();
+        
         let addr = match connection.peer_addr() {
             Ok(addr) => addr.to_string(),
             Err(_) => "unknown".into(),
         };
 
         // Обрабатываем запрос.
-        connection.process_request(|req| {
-            // Если запрос fetch, возвращаем историю сообщений.
-            if req == "fetch" {
-                return chat.history();
-            }
+        let processing_result = connection
+            .process_request_async(|req| async move {
+                // Если запрос fetch, возвращаем историю сообщений.
+                if req == "fetch" {
+                    return chat.history().await;
+                }
 
-            // Если запрос append, добавляем новое сообщение.
-            if let Some(msg) = req.strip_prefix("append:") {
-                return chat.append(addr, msg.into());
-            }
+                // Если запрос append, добавляем новое сообщение.
+                if let Some(msg) = req.strip_prefix("append:") {
+                    return chat.append(addr, msg.into()).await;
+                }
 
-            // Если запрос неизвестен, возвращаем сообщение об ошибке.
-            format!("Unknown request: {}", req)
-        }).await?;
+                // Если запрос неизвестен, возвращаем сообщение об ошибке.
+                format!("Unknown request: {}", req)
+            })
+            .await;
+
+        if let Err(e) = processing_result {
+            eprintln!("Error processing request: {}", e);
+            break;
+        }
     }
 }
 
 /// Храним последовательность сообщений.
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct Chat {
-    messages: Vec<Message>,
+    messages: RwLock<Vec<Message>>,
 }
 
 impl Chat {
     /// Выводим историю сообщений.
-    pub fn history(&self) -> String {
-        self.messages.iter().map(|m| m.to_string()).collect()
+    pub async fn history(&self) -> String {
+        self.messages
+            .read()
+            .await
+            .iter()
+            .map(|m| m.to_string())
+            .collect()
     }
 
     /// Добавляем новое сообщение.
-    pub fn append(&mut self, from: String, msg: String) -> String {
+    pub async fn append(&self, from: String, msg: String) -> String {
         let sent = Utc::now();
         let msg = Message { sent, from, msg };
-        self.messages.push(msg.clone());
+        self.messages.write().await.push(msg.clone());
         msg.to_string()
     }
 }

@@ -1,10 +1,10 @@
 use chat_client::asnc::ChatClient;
 use std::error::Error;
-use std::fs;
+use tokio::fs;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let addr = get_server_addr();
+    let addr = get_server_addr().await;
 
     // Читаем аргументы командной строки.
     let mut cli_args = std::env::args().skip(1);
@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", chat_history);
         return Ok(());
     }
-    
+
     if action == "append" {
         // Отправляем новое сообщение.
         let Some(msg) = cli_args.next() else {
@@ -33,10 +33,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         client.append(&msg).await?;
         return Ok(());
     }
-    
+
     Err(String::from("Unknown action, use 'append' or 'fetch'").into())
 }
 
-fn get_server_addr() -> String {
-    fs::read_to_string("settings/addr").unwrap_or_else(|_| String::from("127.0.0.1:55331"))
+async fn get_server_addr() -> String {
+    fs::read_to_string("settings/addr")
+        .await
+        .unwrap_or_else(|_| String::from("127.0.0.1:55331"))
 }

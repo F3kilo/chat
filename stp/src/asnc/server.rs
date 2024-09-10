@@ -1,4 +1,5 @@
 use crate::error::{ConnectError, RequestError};
+use std::future::Future;
 use std::io;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -54,6 +55,17 @@ impl StpConnection {
     {
         let request = super::recv_string(&mut self.stream).await?;
         let response = handler(request);
+        super::send_string(&response, &mut self.stream).await?;
+        Ok(())
+    }
+
+    pub async fn process_request_async<F, Fut>(&mut self, handler: F) -> Result<(), RequestError>
+    where
+        Fut: Future<Output = String>,
+        F: FnOnce(String) -> Fut,
+    {
+        let request = super::recv_string(&mut self.stream).await?;
+        let response = handler(request).await;
         super::send_string(&response, &mut self.stream).await?;
         Ok(())
     }
