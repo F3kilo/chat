@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use std::error::Error;
 use std::{fmt, fs};
-use stp::server::StpServer;
+use stp::server::{StpConnection, StpServer};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Читаем IP-адрес сервера из файла или используем значение по умолчанию.
@@ -14,17 +14,23 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Обрабатываем подключения клиентов.
     loop {
-        let Ok(mut connection) = server.accept() else {
+        let Ok( connection) = server.accept() else {
             continue;
         };
 
-        let addr = match connection.peer_addr() {
-            Ok(addr) => addr.to_string(),
-            Err(_) => "unknown".into(),
-        };
+        process_connection(connection, &mut chat);
+    }
+}
 
+fn process_connection(mut connection: StpConnection, chat: &mut Chat) {
+    let addr = match connection.peer_addr() {
+        Ok(addr) => addr.to_string(),
+        Err(_) => "unknown".into(),
+    };
+
+    loop {
         // Обрабатываем запрос.
-        connection.process_request(|req| {
+        let process_result = connection.process_request(|req| {
             // Если запрос fetch, возвращаем историю сообщений.
             if req == "fetch" {
                 return chat.history();
@@ -32,12 +38,17 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // Если запрос append, добавляем новое сообщение.
             if let Some(msg) = req.strip_prefix("append:") {
-                return chat.append(addr, msg.into());
+                return chat.append(addr.clone(), msg.into());
             }
 
             // Если запрос неизвестен, возвращаем сообщение об ошибке.
             format!("Unknown request: {}", req)
-        })?;
+        });
+
+        if let Err(e) = process_result {
+            eprintln!("Error processing request: {}", e);
+            break;
+        }
     }
 }
 
