@@ -1,40 +1,30 @@
 pub mod asnc;
 
 use std::net::ToSocketAddrs;
-use stp::client::{RequestResult, StpClient};
-use stp::error::ConnectResult;
+use stp::client::StpClient;
+use stp::error::{ConnectError, RequestError};
 
+/// Клиент чата.
 pub struct ChatClient {
     stp: StpClient,
 }
 
 impl ChatClient {
-    pub fn new<Addr: ToSocketAddrs>(addr: Addr) -> ConnectResult<Self> {
+    /// Подключаемся к серверу.
+    pub fn new<Addr: ToSocketAddrs>(addr: Addr) -> Result<Self, ConnectError> {
         let stp = StpClient::connect(addr)?;
         Ok(Self { stp })
     }
 
-    pub fn fetch(&mut self, room_id: &str) -> RequestResult {
-        let request = format!("fetch|||{}", room_id);
-        self.stp.send_request(request)
+    /// Запрашиваем сообщения в чате.
+    pub fn fetch(&mut self) -> Result<String, RequestError> {
+        self.stp.send_request("fetch")
     }
 
-    pub fn create_room(&mut self, room_id: &str) -> RequestResult {
-        let request = format!("create|||{}", room_id);
-        self.stp.send_request(request)
-    }
-
-    pub fn append(&mut self, room_id: &str, msg: &str) -> RequestResult {
-        let request = format!("append|||{}|||{}", room_id, msg);
+    /// Добавляем сообщение.
+    pub fn append(&mut self, msg: &str) -> Result<String, RequestError> {
+        let request = format!("append:{}", msg);
         self.stp.send_request(request)
     }
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
-}

@@ -1,5 +1,5 @@
 [package]
-name = "chat_tui"
+name = "chat_cli"
 version = "0.1.0"
 edition = "2021"
 

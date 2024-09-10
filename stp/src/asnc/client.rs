@@ -1,17 +1,15 @@
-use crate::error::{ConnectError, ConnectResult, RecvError, SendError};
-use thiserror::Error;
+use crate::error::{ConnectError, RequestError};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
-use tokio::net::ToSocketAddrs;
+use tokio::net::{TcpStream, ToSocketAddrs};
 
-/// Represent client-side connection for STP
+/// Клиент STP.
 pub struct StpClient {
     stream: TcpStream,
 }
 
 impl StpClient {
-    /// Try to connect to specified address and perform handshake.
-    pub async fn connect<Addrs>(addrs: Addrs) -> ConnectResult<Self>
+    /// Пытаемся подключится к серверу и проверяем, что он поддерживает STP.
+    pub async fn connect<Addrs>(addrs: Addrs) -> Result<Self, ConnectError>
     where
         Addrs: ToSocketAddrs,
     {
@@ -19,35 +17,24 @@ impl StpClient {
         Self::try_handshake(stream).await
     }
 
-    /// Send request to connected STP server.
-    pub async fn send_request<R: AsRef<str>>(&mut self, req: R) -> RequestResult {
-        super::send_string_async(req, &mut self.stream).await?;
-        let response = super::recv_string_async(&mut self.stream).await?;
+    /// Проводим handshake, чтобы убедиться, что сервер поддерживает STP:
+    /// 1) отправляем байты "clnt",
+    /// 1) ожидаем байты "serv" в ответ.
+    async fn try_handshake(mut stream: TcpStream) -> Result<Self, ConnectError> {
+        stream.write_all(b"clnt").await?;
+        let mut buf = [0; 4];
+        stream.read_exact(&mut buf).await?;
+        if &buf != b"serv" {
+            return Err(ConnectError::BadHandshake);
+        }
+        Ok(Self { stream })
+    }
+
+    /// Отправка запроса на сервер и получение ответа.
+    pub async fn send_request<R: AsRef<str>>(&mut self, req: R) -> Result<String, RequestError> {
+        super::send_string(req, &mut self.stream).await?;
+        let response = super::recv_string(&mut self.stream).await?;
         Ok(response)
     }
-
-    async fn try_handshake(mut s: TcpStream) -> ConnectResult<Self> {
-        s.write_all(b"clnt").await?;
-        let mut buf = [0; 4];
-        s.read_exact(&mut buf).await?;
-        if &buf != b"serv" {
-            let msg = format!("received: {:?}", buf);
-            return Err(ConnectError::BadHandshake(msg));
-        }
-        Ok(Self { stream: s })
-    }
 }
 
-pub type RequestResult = Result<String, RequestError>;
-
-/// Error for request sending. It consists from two steps: sending and receiving data.
-///
-/// `SendError` caused by send data error.
-/// `RecvError` caused by receive data error.
-#[derive(Debug, Error)]
-pub enum RequestError {
-    #[error(transparent)]
-    Send(#[from] SendError),
-    #[error(transparent)]
-    Recv(#[from] RecvError),
-}

@@ -1,19 +1,17 @@
-use crate::error::{ConnectError, ConnectResult};
-use crate::{RecvResult, SendResult};
+use crate::error::{ConnectError, RequestError};
 use std::io;
 use std::net::SocketAddr;
-use thiserror::Error;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream, ToSocketAddrs};
 
-/// Represent STP server, that can accept incoming connections.
+/// STP сервер.
 pub struct StpServer {
     tcp: TcpListener,
 }
 
 impl StpServer {
-    /// Binds server to specified socket.
-    pub async fn bind<Addrs>(addrs: Addrs) -> BindResult
+    /// Закрепляем сервер на сокете.
+    pub async fn bind<Addrs>(addrs: Addrs) -> io::Result<Self>
     where
         Addrs: ToSocketAddrs,
     {
@@ -21,53 +19,47 @@ impl StpServer {
         Ok(Self { tcp })
     }
 
-    /// Wait for incoming connection.
-    pub async fn accept(&self) -> ConnectResult<StpConnection> {
-        let (connection, _) = self.tcp.accept().await?;
-        Self::try_handshake(connection).await
+    /// Принимаем входящее соединение и производим handshake.
+    pub async fn accept(&self) -> Result<StpConnection, ConnectError> {
+        let (stream, _) = self.tcp.accept().await?;
+        Self::try_handshake(stream).await
     }
 
-    async fn try_handshake(mut stream: TcpStream) -> ConnectResult<StpConnection> {
+    /// Проводим handshake, чтобы убедиться, что клиент поддерживает STP:
+    /// 1) ожидаем байты "clnt",
+    /// 1) отправляем байты "serv" в ответ.
+    async fn try_handshake(mut stream: TcpStream) -> Result<StpConnection, ConnectError> {
         let mut buf = [0; 4];
         stream.read_exact(&mut buf).await?;
         if &buf != b"clnt" {
-            let msg = format!("received: {:?}", buf);
-            return Err(ConnectError::BadHandshake(msg));
+            return Err(ConnectError::BadHandshake);
         }
         stream.write_all(b"serv").await?;
         Ok(StpConnection { stream })
     }
 }
 
-pub type BindResult = Result<StpServer, BindError>;
-
-/// Bind to socket error
-#[derive(Debug, Error)]
-pub enum BindError {
-    #[error("IO error: {0}")]
-    Io(#[from] io::Error),
-}
-
-/// Represent connection from client.
-///
-/// Allows to receive requests and send responses.
+/// Соединение с клиентом.
+/// Позволяет обрабатывать запросы.
 pub struct StpConnection {
     stream: TcpStream,
 }
 
 impl StpConnection {
-    /// Send response to client
-    pub async fn send_response<Resp: AsRef<str>>(&mut self, response: Resp) -> SendResult {
-        super::send_string_async(response, &mut self.stream).await
-    }
-
-    /// Receive requests from client
-    pub async fn recv_request(&mut self) -> RecvResult {
-        super::recv_string_async(&mut self.stream).await
+    /// Обрабатываем запрос и возвращаем ответ используя логику
+    /// предоставленную вызывающей стороной.
+    pub async fn process_request<F>(&mut self, handler: F) -> Result<(), RequestError>
+    where
+        F: FnOnce(String) -> String,
+    {
+        let request = super::recv_string(&mut self.stream).await?;
+        let response = handler(request);
+        super::send_string(&response, &mut self.stream).await?;
+        Ok(())
     }
 
     /// Address of connected client
-    pub async fn peer_addr(&self) -> io::Result<SocketAddr> {
+    pub fn peer_addr(&self) -> io::Result<SocketAddr> {
         self.stream.peer_addr()
     }
 }

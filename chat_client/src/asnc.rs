@@ -1,29 +1,27 @@
-use stp::asnc::client::{RequestResult, StpClient};
-use stp::error::ConnectResult;
+use stp::asnc::client::StpClient;
+use stp::error::{ConnectError, RequestError};
 use tokio::net::ToSocketAddrs;
 
+/// Клиент чата.
 pub struct ChatClient {
     stp: StpClient,
 }
 
 impl ChatClient {
-    pub async fn new<Addr: ToSocketAddrs>(addr: Addr) -> ConnectResult<Self> {
+    /// Подключаемся к серверу.
+    pub async fn new<Addr: ToSocketAddrs>(addr: Addr) -> Result<Self, ConnectError> {
         let stp = StpClient::connect(addr).await?;
         Ok(Self { stp })
     }
 
-    pub async fn fetch(&mut self, room_id: &str) -> RequestResult {
-        let request = format!("fetch|||{}", room_id);
-        self.stp.send_request(request).await
+    /// Запрашиваем сообщения в чате.
+    pub async fn fetch(&mut self) -> Result<String, RequestError> {
+        self.stp.send_request("fetch").await
     }
 
-    pub async fn create_room(&mut self, room_id: &str) -> RequestResult {
-        let request = format!("create|||{}", room_id);
-        self.stp.send_request(request).await
-    }
-
-    pub async fn append(&mut self, room_id: &str, msg: &str) -> RequestResult {
-        let request = format!("append|||{}|||{}", room_id, msg);
+    /// Добавляем сообщение.
+    pub async fn append(&mut self, msg: &str) -> Result<String, RequestError> {
+        let request = format!("append:{}", msg);
         self.stp.send_request(request).await
     }
 }
