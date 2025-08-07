@@ -1,8 +1,7 @@
 # Basic chat
 Provides basic chat functions:
-- create room
-- send messages to room
-- fetch room's messages
+- send messages
+- fetch messages
 
 ## Components
 - STP - custom string transfer protocol library above TCP.
