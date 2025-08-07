@@ -2,12 +2,14 @@ pub mod client;
 pub mod server;
 
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 
 use crate::error::{RecvError, SendError};
 
 /// Отправляет четыре байта `data.len()`, а потом сами данные.
-pub async fn send_string<Data: AsRef<str>>(data: Data, writer: &mut TcpStream) -> Result<(), SendError> {
+pub async fn send_string<Data: AsRef<str>, W: AsyncWriteExt + Unpin>(
+    data: Data,
+    writer: &mut W,
+) -> Result<(), SendError> {
     let bytes = data.as_ref().as_bytes();
     let len = bytes.len() as u32;
     let len_bytes = len.to_be_bytes();
@@ -17,7 +19,7 @@ pub async fn send_string<Data: AsRef<str>>(data: Data, writer: &mut TcpStream) -
 }
 
 /// Читает четыре байта длины, а потом сами данные.
-pub async fn recv_string(reader: &mut TcpStream) -> Result<String, RecvError> {
+pub async fn recv_string<R: AsyncReadExt + Unpin>(reader: &mut R) -> Result<String, RecvError> {
     let mut buf = [0; 4];
     reader.read_exact(&mut buf).await?;
     let len = u32::from_be_bytes(buf);
