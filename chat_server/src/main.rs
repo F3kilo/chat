@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         };
 
         // Обрабатываем запрос.
-        connection.process_request(|req| {
+        let process_result = connection.process_request(|req| {
             // Если запрос fetch, возвращаем историю сообщений.
             if req == "fetch" {
                 return chat.history();
@@ -36,8 +36,12 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             // Если запрос неизвестен, возвращаем сообщение об ошибке.
-            format!("Unknown request: {}", req)
-        })?;
+            format!("Unknown request: {req}")
+        });
+
+        if let Err(err) = process_result {
+            println!("Error processing request: {err}");
+        }
     }
 }
 
