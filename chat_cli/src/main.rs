@@ -9,7 +9,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Читаем аргументы командной строки.
     let mut cli_args = std::env::args().skip(1);
     let Some(action) = cli_args.next() else {
-        return Err(String::from("No action provided, use 'append' or 'fetch'").into());
+        return Err("No action provided, use 'append' or 'fetch'".into());
     };
 
     println!("Performing action: {action}...");
@@ -24,17 +24,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", chat_history);
         return Ok(());
     }
-    
+
     if action == "append" {
         // Отправляем новое сообщение.
         let Some(msg) = cli_args.next() else {
-            return Err(String::from("No message provided").into());
+            return Err("No message provided".into());
         };
         client.append(&msg)?;
         return Ok(());
     }
-    
-    Err(String::from("Unknown action, use 'append' or 'fetch'").into())
+
+    Err("Unknown action, use 'append' or 'fetch'".into())
 }
 
 fn get_server_addr() -> String {
