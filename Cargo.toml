@@ -1,7 +1,7 @@
 [workspace]
 
 # Используем последнюю версию resolver, чтобы Cargo не ругался.
-resolver = "2" 
+resolver = "3" 
 
 members = [
     "stp",
