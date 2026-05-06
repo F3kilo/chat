@@ -52,14 +52,13 @@ mod tests {
         let mut buf = Vec::new();
 
         send_string(&data, &mut buf).unwrap();
-        
+
         let len = u32::from_be_bytes(buf[..4].try_into().unwrap());
         let string_data = String::from_utf8(buf[4..].to_vec()).unwrap();
 
         assert_eq!(data, string_data);
         assert_eq!(len, 5);
     }
-
 
     #[test]
     fn test_recv() {

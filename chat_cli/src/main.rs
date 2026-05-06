@@ -2,7 +2,6 @@ use chat_client::ChatClient;
 use std::error::Error;
 use std::fs;
 
-
 fn main() -> Result<(), Box<dyn Error>> {
     let addr = get_server_addr();
 
@@ -24,7 +23,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("{}", chat_history);
         return Ok(());
     }
-    
+
     if action == "append" {
         // Отправляем новое сообщение.
         let Some(msg) = cli_args.next() else {
@@ -33,7 +32,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         client.append(&msg)?;
         return Ok(());
     }
-    
+
     Err(String::from("Unknown action, use 'append' or 'fetch'").into())
 }
 
