@@ -27,4 +27,3 @@ impl ChatClient {
         self.stp.send_request(request)
     }
 }
-

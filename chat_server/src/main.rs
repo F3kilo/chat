@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Обрабатываем подключения клиентов.
     loop {
-        let Ok( connection) = server.accept() else {
+        let Ok(connection) = server.accept() else {
             continue;
         };
 

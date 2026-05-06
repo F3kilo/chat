@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 async fn process_connection(mut connection: StpConnection, chat: Arc<Chat>) {
     loop {
         let chat = chat.clone();
-        
+
         let addr = match connection.peer_addr() {
             Ok(addr) => addr.to_string(),
             Err(_) => "unknown".into(),

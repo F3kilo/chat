@@ -45,7 +45,6 @@ async fn main() {
 
     let finish = Instant::now();
 
-
     println!("Sent {} requests", counter.load(Ordering::Relaxed));
     println!("Elapsed: {:?}", finish - start);
 }

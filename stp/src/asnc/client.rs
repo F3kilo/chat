@@ -37,4 +37,3 @@ impl StpClient {
         Ok(response)
     }
 }
-

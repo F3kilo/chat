@@ -11,7 +11,6 @@ pub enum ConnectError {
     Io(io::Error),
 }
 
-
 impl fmt::Display for ConnectError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -73,7 +72,6 @@ pub enum RecvError {
     /// Внутренняя ошибка IO.
     Io(io::Error),
 }
-
 
 impl fmt::Display for RecvError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
